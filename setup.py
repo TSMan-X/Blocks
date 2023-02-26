@@ -9,6 +9,6 @@ setup(
         )
     ],
     cmdclass={						       # 执行编译命令设置
-        'build_ext': cpp_extension.BuildExtension
+        'build_ext': cpp_extension.BuildExtension.with_options(no_python_abi_suffix=True)
     }
 )
