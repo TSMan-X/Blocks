@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cassert>
 #include <sycl/sycl.hpp>
 
 template<class type>
@@ -9,14 +10,23 @@ struct matrix_2d {
         h = data.size();
         w = data[0].size();
     }
+
+    vector<type> & operator[](int i) {
+        return data[i];
+    }
+
+    friend std::ostream & operator<<(std::ostream & o, const matrix_2d<type> m) {
+        for (int i = 0; i < m.h; ++i) {
+            for (int j = 0; j < m.w; ++j) o << m[i][j] << " ";
+            o << std::endl;
+        }
+        return o;
+    }
+
     int h;
     int w;
     std::vector<std::vector<type>> data;
 };
-
-template<class type>
-type & inner_product() {
-}
 
 template<class type>
 matrix_2d<type> & gemm2d(matrix_2d<type> & a, matrix_2d<type> & b, matrix_2d<type> & result) {
