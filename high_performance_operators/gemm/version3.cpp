@@ -9,33 +9,55 @@
 
 template<class type>
 struct matrix_2d {
-    matrix_2d(std::vector<std::vector<type>> &data) {
-        this->data = data;
-        h = data.size();
-        w = data[0].size();
+
+public:
+
+    matrix_2d(std::vector<std::vector<type>> data) {
+      h = data.size();
+      w = data[0].size();
+      stride[0] = w;
+      stride[1] = 1;
+      
+      this->data = (type *)malloc(h * w * sizeof(type));
+      for (int i = 0; i < h; ++i) {
+        for (int j = 0; j < w; ++j) {
+          (this->data)[i * stride[0] + j * stride[1]] = data[i][j];  
+        }
+      }
     }
 
     matrix_2d(int high, int width, type fill = 0) {
-        data.resize(high, std::vector<type>(width, fill));
-        h = high;
-        w = width;
+      h = high;
+      w = width;
+      stride[0] = w;
+      stride[1] = 1;
+
+      this->data = (type *)malloc(h * w * sizeof(type));
+      memset(this->data, fill, h * w);
     }
 
-    std::vector<type> & operator[](int i) {
-        return data[i];
+    type * data_ptr() {
+      return data;
+    }
+
+    type * operator[](int i) {
+      return (this->data) + i * stride[0];
     }
 
     friend std::ostream & operator<<(std::ostream & o, matrix_2d<type> & m) {
-        for (int i = 0; i < m.h; ++i) {
-            for (int j = 0; j < m.w; ++j) o << m[i][j] << " ";
-            o << std::endl;
-        }
-        return o;
+      for (int i = 0; i < m.h; ++i) {
+          for (int j = 0; j < m.w; ++j) o << m[i][j] << " ";
+          o << std::endl;
+      }
+      return o;
     }
 
     int h;
     int w;
-    std::vector<std::vector<type>> data;
+private:
+    int stride[2];
+
+    type * data;
 };
 
 template<class type>
@@ -55,19 +77,17 @@ matrix_2d<type> & gemm2d_version1(matrix_2d<type> & a, matrix_2d<type> & b, matr
     assert(a.w == b.h);
     assert(result.h == a.h && result.w == b.w);
 
-    auto trans_b = matrix_2d<type>(b.w, b.h);
-    transposition<type>(b, trans_b);
+    try {
+      sycl::queue q(default_selector_v);
+      cout << q.get_device().get_info<info::device::name>() << std::endl;
 
-    for (int i = 0; i < result.h; ++i) {
-        for (int j = 0; j < result.w; ++j) {
-            type tmp = 0;
-            for (int k = 0; k < a.w; ++k) {
-                tmp += a[i][k] * trans_b[j][k];
-            }
-            result[i][j] = tmp;
-        }
+      sycl::buffer 
+
+    } catch (sycl::exception const & e){
+      std::cout << "Sycl level error happens!" << std::endl;
+      terminate()
     }
-    return result;
+
 };
 
 int main() {
