@@ -1,11 +1,13 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <limits>
+
 #include <sycl/sycl.hpp>
 
-// Transposition
+// Sycl version
 
-// one should always start with memory before optimizing arithmetic, as it is much more likely to be the bottleneck.
+// Maximize the parallization of the computing.
 
 template<class type>
 struct matrix_2d {
@@ -72,23 +74,47 @@ void transposition(matrix_2d<type> & old, matrix_2d<type> & trans) {
 }
 
 template<class type>
-matrix_2d<type> & gemm2d_version1(matrix_2d<type> & a, matrix_2d<type> & b, matrix_2d<type> & result) {
+matrix_2d<type> & gemm2d_version2(matrix_2d<type> & a, matrix_2d<type> & b, matrix_2d<type> & result) {
     assert(a.w == b.h);
     assert(result.h == a.h && result.w == b.w);
 
-    auto trans_b = matrix_2d<type>(b.w, b.h);
-    transposition<type>(b, trans_b);
+    try {
+      sycl::queue q(sycl::default_selector_v);
+      std::cout << q.get_device().get_info<sycl::info::device::name>() << std::endl;
 
-    for (int i = 0; i < result.h; ++i) {
-        for (int j = 0; j < result.w; ++j) {
-            type tmp = 0;
-            for (int k = 0; k < a.w; ++k) {
-                tmp += a[i][k] * trans_b[j][k];
-            }
-            result[i][j] = tmp;
-        }
+      sycl::buffer a_buf(a.data_ptr(), sycl::range(a.h, a.w));
+      sycl::buffer b_buf(b.data_ptr(), sycl::range(b.h, b.w));
+      sycl::buffer re_buf(result.data_ptr(), sycl::range(result.h, result.w));
+      
+      q.submit([&](auto &h) {
+        sycl::accessor a(a_buf, h, sycl::read_only);  
+        sycl::accessor b(b_buf, h, sycl::read_only); 
+        sycl::accessor re(re_buf, h, sycl::write_only);
+
+        int a_w = a.get_range()[1];
+
+        h.parallel_for(sycl::range(re.get_range()[0], re.get_range()[1]), [=](auto index){
+          int row_number = index[0];
+          int col_number = index[1];
+
+          type sum = 0;
+
+          for (int i = 0; i < a_w; ++i) {
+            sum += a[row_number][i] * b[i][col_number];
+          }
+
+          re[row_number][col_number] = sum;
+        });
+
+      });
+
+    } catch (sycl::exception const & e){
+      std::cout << "Sycl level error happens!" << std::endl;
+      std::terminate();
     }
+
     return result;
+
 };
 
 int main() {
@@ -96,7 +122,7 @@ int main() {
     auto b = matrix_2d<float>(3, 5, 1.5);
     auto c = matrix_2d<float>(4, 5);
 
-    gemm2d_version1<float>(a, b, c);
+    gemm2d_version2<float>(a, b, c);
     std::cout << a << b << c << std::endl;
 
     return 0;
