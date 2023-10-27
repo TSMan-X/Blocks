@@ -1,3 +1,6 @@
 [submodule "third_party/HPO"]
 	path = third_party/HPO
 	url = https://github.com/Synchorg/HPO.git
+[submodule "third_party/graph-fusion"]
+	path = third_party/graph-fusion
+	url = https://github.com/luoyimu18/graph-fusion.git
