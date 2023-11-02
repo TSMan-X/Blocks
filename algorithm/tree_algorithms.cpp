@@ -9,25 +9,27 @@ public:
   T value;
   node * left;
   node * right;
-}
+};
 
-void DLR(node * root) {
-  std::stack<node *> stack;
+template<class T>
+void DLR(node<T> * root) {
+  std::stack<node<T> *> stack;
   stack.push(root);
 
-  node * top;
+  node<T> * top;
   while(!stack.empty()) {
     top = stack.top();
     std::cout << top->value << std::endl;
-    stack.pop()
+    stack.pop();
     if (top->right != nullptr) stack.push(top->right);
     if (top->left != nullptr) stack.push(top->left);
   }
   return;
-}
+};
 
-void LDR(node * root) {
-  std::stack<node *> stack;
+template<class T>
+void LDR(node<T> * root) {
+  std::stack<node<T> *> stack;
   while(root != nullptr || !stack.empty()) {
     while(root != nullptr) {
       stack.push(root);
@@ -35,20 +37,21 @@ void LDR(node * root) {
     }
     if(!stack.empty()){
       root = stack.top();
-      std::cout << root->val << std::endl;
+      std::cout << root->value << std::endl;
       stack.pop();
       root = root->right;
     }
   }
   return;
-}
+};
 
-void LRD(node * root) {
+template<class T>
+void LRD(node<T> * root) {
   if (root == nullptr) return;
-  std::stack<node*> stack;
+  std::stack<node<T> *> stack;
   stack.push(root);
 
-  node * last_pop = nullptr;
+  node<T> * last_pop = nullptr;
   while(!stack.empty()) {
     while(root->left != nullptr) {
       root = root->left;
@@ -59,21 +62,44 @@ void LRD(node * root) {
         std::cout << root->value << std::endl;
         stack.pop();
         last_pop = root;
-        root = stack.top();
+        if (!stack.empty()){
+          root = stack.top();
+        }
       } else {
         root = root->right;
-        stack.push(right);
+        stack.push(root);
         break;
       }
     }
   }
   return;
-}
+};
 
-
-void topological_sorting() {
-
-}
+/*
+        1
+       / \
+      2   3
+       \
+        4
+       /
+      5
+*/
 
 int main() {
+  node<int> * root = new node<int>();
+  root->value = 1;
+  root->left = new node<int>();
+  root->left->value = 2;
+  root->right = new node<int>();
+  root->right->value = 3;
+  root->left->right = new node<int>();
+  root->left->right->value = 4;
+  root->left->right->left = new node<int>();
+  root->left->right->left->value = 5;
+
+  DLR(root);
+  LDR(root);
+  LRD(root);
+
+  return 0;
 }
