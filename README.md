@@ -1,4 +1,3 @@
 # Blocks
 
-This is a collection of manipulation of concetp of computer engineering.
-WIP.
+High performance AI model library for both Inference and Training.
